@@ -1,18 +1,19 @@
+// app/driver/review/[id]/page.tsx
+
 import { createClient } from "@supabase/supabase-js";
 
-export default async function DriverReviews({ params }: any) {
-  const driverId = params.id;
+export const dynamic = "force-dynamic";
 
-  // 👇 Server-side Supabase (secure)
+export default async function DriverReviews({ params }: { params: { id: string } }) {
   const supabase = createClient(
-    process.env.SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
   const { data } = await supabase
     .from("ratings")
     .select("*")
-    .eq("driver_id", driverId);
+    .eq("driver_id", params.id);
 
   return (
     <div className="max-w-xl mx-auto mt-6">
