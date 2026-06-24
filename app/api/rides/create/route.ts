@@ -1,4 +1,4 @@
-import supabase from "@/lib/supabaseClient";
+import supabase from "@/lib/supabaseAdmin";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -12,7 +12,8 @@ export async function POST(req: Request) {
     pickup_lng,
     drop_lat,
     drop_lng,
-    fare
+    fare,
+    status = "requested",
   } = body;
 
   const { data, error } = await supabase
@@ -25,7 +26,8 @@ export async function POST(req: Request) {
       pickup_lng,
       drop_lat,
       drop_lng,
-      fare
+      fare,
+      status,
     }])
     .select();
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import supabase from "@/lib/supabaseClient";
+import { CreditCard, Calendar } from "lucide-react";
 
 export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<any[]>([]);
@@ -22,46 +23,56 @@ export default function AdminPaymentsPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Payments Dashboard</h1>
+    <div className="animate-fade-in">
+      <div className="flex items-center gap-2 mb-6">
+        <CreditCard size={20} className="text-primary-400" />
+        <h1 className="text-2xl font-bold text-white">Payments Dashboard</h1>
+      </div>
 
-      <table className="w-full bg-white rounded-xl shadow">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-3 text-left">Ride ID</th>
-            <th className="p-3 text-left">Rider</th>
-            <th className="p-3 text-left">Driver</th>
-            <th className="p-3 text-left">Amount</th>
-            <th className="p-3 text-left">Status</th>
-            <th className="p-3 text-left">Date</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {payments.map((p) => (
-            <tr key={p.id} className="border-t">
-              <td className="p-3">{p.ride_id}</td>
-              <td className="p-3">{p.rider_id}</td>
-              <td className="p-3">{p.driver_id}</td>
-              <td className="p-3 font-semibold">₹{p.amount / 100}</td>
-              <td className="p-3">
-                <span
-                  className={`px-3 py-1 rounded-lg text-sm font-semibold ${
-                    p.status === "paid"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {p.status}
-                </span>
-              </td>
-              <td className="p-3">
-                {new Date(p.created_at).toLocaleString()}
-              </td>
+      <div className="glass-card overflow-hidden">
+        <table className="dark-table">
+          <thead>
+            <tr>
+              <th>Ride ID</th>
+              <th>Rider</th>
+              <th>Driver</th>
+              <th>Amount</th>
+              <th>Status</th>
+              <th>Date</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {payments.map((p) => (
+              <tr key={p.id}>
+                <td className="font-mono text-xs">{p.ride_id}</td>
+                <td className="font-mono text-xs">{p.rider_id}</td>
+                <td className="font-mono text-xs">{p.driver_id}</td>
+                <td className="font-semibold text-white">
+                  ₹{p.amount / 100}
+                </td>
+                <td>
+                  <span
+                    className={
+                      p.status === "paid"
+                        ? "badge badge-paid"
+                        : "badge badge-unpaid"
+                    }
+                  >
+                    {p.status}
+                  </span>
+                </td>
+                <td>
+                  <span className="flex items-center gap-1.5 text-slate-400 text-xs">
+                    <Calendar size={12} />
+                    {new Date(p.created_at).toLocaleDateString()}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

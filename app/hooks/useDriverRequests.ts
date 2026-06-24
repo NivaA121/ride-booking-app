@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import supabase from "@/lib/supabaseClient";
 
 export interface Ride {
   id: string;
@@ -11,54 +10,46 @@ export interface Ride {
   rider_id: string;
   pickup_lat: number;
   pickup_lng: number;
+  drop_lat: number;
+  drop_lng: number;
+  fare: number | null;
+}
+
+function loadRidesFromStorage(): Ride[] {
+  try {
+    const raw = localStorage.getItem("mock_rides");
+    if (!raw) return [];
+    const all: Ride[] = JSON.parse(raw);
+    // Only show rides that are still "requested"
+    return all.filter((r) => r.status === "requested");
+  } catch {
+    return [];
+  }
 }
 
 export function useDriverRequests() {
   const [rides, setRides] = useState<Ride[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ----------------------------------------------
-  // 1️⃣ Fetch all "requested" rides
-  // ----------------------------------------------
-  async function fetchRides() {
-    setLoading(true);
-
-    const { data, error } = await supabase
-      .from("rides")
-      .select("*")
-      .eq("status", "requested")
-      .order("created_at", { ascending: false });
-
-    if (error) {
-      console.error("Error loading rides:", error);
-    }
-
-    setRides(data || []);
+  function refresh() {
+    setRides(loadRidesFromStorage());
     setLoading(false);
   }
 
-  // ----------------------------------------------
-  // 2️⃣ Run once + enable realtime updates
-  // ----------------------------------------------
   useEffect(() => {
-    fetchRides();
+    // Initial load
+    refresh();
 
-    const channel = supabase
-      .channel("driver-rides")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "rides",
-        },
-        () => fetchRides()
-      )
-      .subscribe();
+    // Listen for same-tab updates (dispatched by request/page.tsx)
+    window.addEventListener("mock_rides_updated", refresh);
+    // Listen for cross-tab updates via storage event
+    window.addEventListener("storage", refresh);
 
     return () => {
-      supabase.removeChannel(channel);
+      window.removeEventListener("mock_rides_updated", refresh);
+      window.removeEventListener("storage", refresh);
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { rides, loading };

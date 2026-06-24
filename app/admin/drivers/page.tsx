@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import supabase from "@/lib/supabaseClient";
+import { Car, CheckCircle2, Clock } from "lucide-react";
 
 type Driver = {
   id: string;
@@ -20,34 +21,45 @@ export default function AdminDriversPage() {
   }, []);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-5">Drivers</h1>
+    <div className="animate-fade-in">
+      <div className="flex items-center gap-2 mb-6">
+        <Car size={20} className="text-primary-400" />
+        <h1 className="text-2xl font-bold text-white">Drivers</h1>
+      </div>
 
-      <table className="w-full bg-white rounded-xl shadow">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-3">User ID</th>
-            <th className="p-3">Is Verified</th>
-            <th className="p-3">Vehicle</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {drivers.map((d) => (
-            <tr key={d.id} className="border-t">
-              <td className="p-3">{d.user_id}</td>
-              <td className="p-3">
-                {d.is_verified ? (
-                  <span className="text-green-600 font-semibold">Verified</span>
-                ) : (
-                  <span className="text-red-600 font-semibold">Pending</span>
-                )}
-              </td>
-              <td className="p-3">{d.vehicle_model}</td>
+      <div className="glass-card overflow-hidden">
+        <table className="dark-table">
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Status</th>
+              <th>Vehicle</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {drivers.map((d) => (
+              <tr key={d.id}>
+                <td className="font-mono text-xs">{d.user_id}</td>
+                <td>
+                  {d.is_verified ? (
+                    <span className="badge badge-accepted flex items-center gap-1 w-fit">
+                      <CheckCircle2 size={12} />
+                      Verified
+                    </span>
+                  ) : (
+                    <span className="badge badge-unpaid flex items-center gap-1 w-fit">
+                      <Clock size={12} />
+                      Pending
+                    </span>
+                  )}
+                </td>
+                <td>{d.vehicle_model || "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

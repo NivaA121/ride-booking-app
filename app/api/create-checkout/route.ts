@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import supabase from "@/lib/supabaseClient";
 
 export async function POST(req: Request) {
-  const { ride_id } = await req.json();
+  const { ride_id, payment_method } = await req.json();
 
   if (!ride_id) {
     return NextResponse.json({ error: "Missing ride_id" }, { status: 400 });
@@ -24,9 +24,9 @@ export async function POST(req: Request) {
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
     payment_method_types: ["card"],
-    success_url: `http://localhost:3000/receipt?ride_id=${ride_id}`,
+    success_url: `http://localhost:3000/payment-success?session_id={CHECKOUT_SESSION_ID}&ride_id=${ride_id}&method=${payment_method || "card"}`,
 
-    cancel_url: "http://localhost:3000/rides?canceled=1",
+    cancel_url: `http://localhost:3000/user/ride-waiting?rideId=${ride_id}`,
 
     line_items: [
       {
@@ -45,6 +45,7 @@ export async function POST(req: Request) {
     metadata: {
       ride_id: ride.id,
       driver_id: ride.driver_id, // must exist in DB
+      payment_method: payment_method || "card",
     },
   });
 

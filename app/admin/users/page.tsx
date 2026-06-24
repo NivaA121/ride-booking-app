@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import supabase from "@/lib/supabaseClient";
+import { Users } from "lucide-react";
 
 type User = {
   id: string;
@@ -23,28 +24,35 @@ export default function AdminUsersPage() {
   }, []);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-5">All Users</h1>
+    <div className="animate-fade-in">
+      <div className="flex items-center gap-2 mb-6">
+        <Users size={20} className="text-primary-400" />
+        <h1 className="text-2xl font-bold text-white">All Users</h1>
+      </div>
 
-      <table className="w-full bg-white rounded-xl shadow">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="p-3 text-left">Name</th>
-            <th className="p-3 text-left">Email</th>
-            <th className="p-3 text-left">Phone</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {users.map((u) => (
-            <tr key={u.id} className="border-t">
-              <td className="p-3">{u.name}</td>
-              <td className="p-3">{u.email}</td>
-              <td className="p-3">{u.phone}</td>
+      <div className="glass-card overflow-hidden">
+        <table className="dark-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {users.map((u) => (
+              <tr key={u.id}>
+                <td className="font-medium text-white">
+                  {u.name || "—"}
+                </td>
+                <td>{u.email || "—"}</td>
+                <td>{u.phone || "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

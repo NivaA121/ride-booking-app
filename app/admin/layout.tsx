@@ -1,13 +1,9 @@
-"use client";
-
-import Sidebar from "../components/Sidebar";
 import { ReactNode } from "react";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex">
-      <Sidebar />
-      <main className="flex-1 p-6 bg-gray-50">
+    <div className="min-h-screen bg-dark-900">
+      <main className="p-6 animate-fade-in">
         {children}
       </main>
     </div>

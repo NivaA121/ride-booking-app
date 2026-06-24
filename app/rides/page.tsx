@@ -5,6 +5,16 @@ import { useAuth } from "@clerk/nextjs";
 import { useEffect, useState } from "react";
 import supabase from "@/lib/supabaseClient";
 import Link from "next/link";
+import {
+  MapPin,
+  Navigation,
+  CreditCard,
+  CheckCircle2,
+  FileText,
+  Loader2,
+  Car,
+  Home,
+} from "lucide-react";
 
 export default function RiderRidesPage() {
   const { userId } = useAuth();
@@ -14,9 +24,7 @@ export default function RiderRidesPage() {
   const [loading, setLoading] = useState(true);
   const [creatingSession, setCreatingSession] = useState(false);
 
-  // -------------------------------------------------------
   // 1️⃣ Fetch rider UUID
-  // -------------------------------------------------------
   useEffect(() => {
     if (!userId) return;
 
@@ -33,9 +41,7 @@ export default function RiderRidesPage() {
     fetchUUID();
   }, [userId]);
 
-  // -------------------------------------------------------
   // 2️⃣ Fetch latest ride
-  // -------------------------------------------------------
   useEffect(() => {
     if (!riderUUID) return;
 
@@ -58,9 +64,7 @@ export default function RiderRidesPage() {
     fetchRide();
   }, [riderUUID]);
 
-  // -------------------------------------------------------
   // 3️⃣ Realtime Fare / Payment Updates
-  // -------------------------------------------------------
   useEffect(() => {
     if (!riderUUID) return;
 
@@ -71,7 +75,6 @@ export default function RiderRidesPage() {
         { event: "*", schema: "public", table: "rides" },
         (payload: { new: any }) => {
           const updated = payload.new;
-          // update UI only for this rider's rides
           if (updated && updated.rider_id === riderUUID) {
             setRide(updated);
           }
@@ -84,16 +87,13 @@ export default function RiderRidesPage() {
     };
   }, [riderUUID]);
 
-  // -------------------------------------------------------
-  // 4️⃣ Start Stripe Checkout (client-side)
-  // -------------------------------------------------------
+  // 4️⃣ Start Stripe Checkout
   async function startPayment() {
     if (!ride || !ride.fare || ride.is_paid) return;
 
     try {
       setCreatingSession(true);
 
-      // Create checkout session on server. Server should return a sessionUrl.
       const res = await fetch("/api/create-checkout-session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -120,7 +120,6 @@ export default function RiderRidesPage() {
         return;
       }
 
-      // Redirect user to Stripe Checkout
       window.location.href = data.sessionUrl;
     } catch (err) {
       console.error("startPayment error:", err);
@@ -129,95 +128,162 @@ export default function RiderRidesPage() {
     }
   }
 
-  // -------------------------------------------------------
   // 5️⃣ UI
-  // -------------------------------------------------------
-  if (loading) return <p className="p-4">Loading your ride...</p>;
-  if (!ride) return <p className="p-4">You have no rides yet.</p>;
+  if (loading)
+    return (
+      <div className="p-6 max-w-xl mx-auto animate-fade-in">
+        <div className="skeleton h-8 w-48 mb-6" />
+        <div className="glass-card p-6 space-y-4">
+          <div className="skeleton h-4 w-3/4" />
+          <div className="skeleton h-4 w-2/3" />
+          <div className="skeleton h-4 w-1/2" />
+          <div className="skeleton h-12 w-full mt-4" />
+        </div>
+      </div>
+    );
+
+  if (!ride)
+    return (
+      <div className="p-6 max-w-xl mx-auto text-center animate-fade-in">
+        <div className="glass-card p-12">
+          <Car size={48} className="text-slate-500 mx-auto mb-4" />
+          <p className="text-slate-400 text-lg">You have no rides yet.</p>
+          <Link href="/user/request" className="btn-primary inline-block mt-6 text-sm">
+            Request Your First Ride
+          </Link>
+        </div>
+      </div>
+    );
+
+  const getStatusBadge = (status: string) => {
+    const classes: Record<string, string> = {
+      requested: "badge badge-requested",
+      accepted: "badge badge-accepted",
+      completed: "badge badge-completed",
+    };
+    return classes[status] || "badge badge-requested";
+  };
 
   return (
-    <div className="p-6 max-w-xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">My Ride</h1>
+    <div className="p-6 max-w-xl mx-auto animate-fade-in">
+      <h1 className="text-3xl font-bold mb-6 gradient-text">My Ride</h1>
 
-      <div className="p-5 border rounded-xl shadow bg-white">
-        <p>
-          <strong>Pickup:</strong> {ride.pickup_location}
-        </p>
+      <div className="glass-card p-6">
+        {/* Locations */}
+        <div className="space-y-3 mb-5">
+          <div className="flex items-start gap-3">
+            <div className="mt-1 w-8 h-8 rounded-lg bg-green-500/15 flex items-center justify-center flex-shrink-0">
+              <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">
+                Pickup
+              </p>
+              <p className="text-sm text-slate-200">{ride.pickup_location}</p>
+            </div>
+          </div>
 
-        <p>
-          <strong>Dropoff:</strong> {ride.drop_location}
-        </p>
+          {/* Connecting line */}
+          <div className="ml-[15px] w-[2px] h-4 bg-gradient-to-b from-green-400/40 to-accent-pink/40" />
 
-        <p className="mt-2">
-          <strong>Status:</strong>{" "}
-          <span
-            className={`font-bold ${
-              ride.status === "completed"
-                ? "text-purple-600"
-                : ride.status === "accepted"
-                ? "text-green-600"
-                : ride.status === "requested"
-                ? "text-blue-600"
-                : "text-gray-600"
-            }`}
-          >
-            {ride.status}
-          </span>
-        </p>
+          <div className="flex items-start gap-3">
+            <div className="mt-1 w-8 h-8 rounded-lg bg-accent-pink/15 flex items-center justify-center flex-shrink-0">
+              <div className="w-2.5 h-2.5 rounded-full bg-accent-pink" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-500 uppercase tracking-wider mb-0.5">
+                Dropoff
+              </p>
+              <p className="text-sm text-slate-200">{ride.drop_location}</p>
+            </div>
+          </div>
+        </div>
 
-        {/* ⭐ FARE */}
-        <p className="mt-3 text-lg">
-          <strong>Fare:</strong>{" "}
+        {/* Divider */}
+        <div className="h-px bg-white/5 my-5" />
+
+        {/* Status */}
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm text-slate-400">Status</span>
+          <span className={getStatusBadge(ride.status)}>{ride.status}</span>
+        </div>
+
+        {/* Fare */}
+        <div className="flex items-center justify-between mb-5">
+          <span className="text-sm text-slate-400">Fare</span>
           {ride.fare ? (
-            <span className="text-black font-bold">₹{ride.fare}</span>
+            <span className="text-2xl font-bold gradient-text">
+              ₹{ride.fare}
+            </span>
           ) : (
-            <span className="text-indigo-600">calculating...</span>
+            <span className="text-sm text-primary-400 flex items-center gap-2">
+              <Loader2 size={14} className="animate-spin" />
+              Calculating...
+            </span>
           )}
-        </p>
+        </div>
 
-        {/* ⭐ Pay Now - only when not paid */}
+        {/* Pay Now */}
         {!ride.is_paid && ride.fare && (
           <button
             onClick={startPayment}
             disabled={creatingSession}
-            className={`mt-4 w-full ${
-              creatingSession ? "bg-green-400" : "bg-green-600 hover:bg-green-700"
-            } text-white py-3 rounded-lg font-semibold`}
+            className={`w-full py-3.5 rounded-xl font-semibold text-white transition-all duration-300 flex items-center justify-center gap-2 ${
+              creatingSession
+                ? "bg-green-500/50 cursor-wait"
+                : "btn-success shadow-glow-green hover:shadow-glow-green"
+            }`}
           >
-            {creatingSession ? "Redirecting to Checkout..." : `Pay Now ₹${ride.fare}`}
+            <CreditCard size={18} />
+            {creatingSession
+              ? "Redirecting to Checkout..."
+              : `Pay Now ₹${ride.fare}`}
           </button>
         )}
 
-        {/* ⭐ If Stripe/Server supplied a receipt URL after payment show it */}
+        {/* Receipt URL */}
         {ride.receipt_url && (
           <a
             href={ride.receipt_url}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 block text-center bg-blue-600 text-white py-3 rounded-lg"
+            className="mt-3 w-full btn-primary flex items-center justify-center gap-2 text-sm"
           >
+            <FileText size={16} />
             View Receipt (Hosted)
           </a>
         )}
 
-        {/* ⭐ If paid -> allow downloading server-generated PDF receipt */}
+        {/* Payment completed */}
         {ride.is_paid && (
-          <div className="mt-4">
-            <p className="text-green-700 font-semibold">✅ Payment Completed</p>
+          <div className="mt-4 space-y-3">
+            <div className="flex items-center gap-2 text-green-400">
+              <CheckCircle2 size={18} />
+              <span className="font-semibold text-sm">Payment Completed</span>
+            </div>
 
-            <button
-              
-              className="mt-3 w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold"
-            >
+            <button className="w-full btn-primary flex items-center justify-center gap-2 text-sm">
+              <FileText size={16} />
               Download Receipt (PDF)
             </button>
           </div>
         )}
 
-        {/* ⭐ Track Ride */}
-        <div className="mt-4">
-          <Link href={`/track/${ride.id}`} className="text-blue-600 underline">
-            Track Ride
+        {/* Track Ride & Dashboard Links */}
+        <div className="mt-5 pt-4 border-t border-white/5 flex flex-col gap-3">
+          <Link
+            href={`/track/${ride.id}`}
+            className="flex items-center gap-2 text-primary-400 hover:text-primary-300 transition-colors text-sm font-medium"
+          >
+            <Navigation size={16} />
+            Track Ride Live
+          </Link>
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-2 text-slate-400 hover:text-slate-300 transition-colors text-sm font-medium"
+          >
+            <Home size={16} />
+            Back to Dashboard
           </Link>
         </div>
       </div>
